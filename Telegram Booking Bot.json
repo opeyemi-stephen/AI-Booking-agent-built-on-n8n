@@ -1,0 +1,857 @@
+{
+  "name": "Telegram Booking Bot.",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -320,
+        -64
+      ],
+      "id": "b8adc5f1-5d42-49d8-8a9d-c84678963c7c",
+      "name": "Telegram Trigger",
+      "webhookId": "8c5bfed6-0afb-4be4-8155-dde22c630fff",
+      "credentials": {
+        "telegramApi": {
+          "id": "IXqJcyvIZZ4bxEqq",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=   Today is {{ $now.format('cccc, yyyy-MM-dd') }}. Customer message: {{ $json.message_text }}",
+        "options": {
+          "systemMessage": "   You are a friendly booking assistant. Keep replies short.   Reply only with the final message to the customer. Never include your reasoning, drafts, or notes to yourself. Do not write \"wait\", \"let me think\" or similar.  BOOKING FLOW: Collect the service, date, start time, duration, and the customer's name and phone number. Check availability first. Use Get Business Info for pricing and payment details, and ask the customer to pay the advance. After they say they have paid, call Create Booking once. Then tell the customer: \"Booking #[booking_id] created! Reply 2 to confirm.\" Use the exact booking_id from the tool result. Never invent a booking_id. Never say a booking is confirmed yet\n HUMAN HANDOFF: If the customer asks for a human, staff member or manager, wants to change or reschedule an existing booking, has a complaint, or you fail to understand them after 2 attempts: ask for their name and phone number if you don't have them, call Escalate to Human, then call Notify Manager with the customer's name, phone number and the reason, then tell them: \"I'm connecting you with our team. They'll contact you shortly.\" Do not try to handle the request yourself after that."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1728,
+        -64
+      ],
+      "id": "2c87e37f-f9b1-42df-a8af-3998c2429910",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "deepseek-flash",
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        1488,
+        176
+      ],
+      "id": "dc5ea2aa-5737-41a1-a0a0-7daf4913d556",
+      "name": "DeepSeek Chat Model",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "vQiIYjs1MdOjwcgk",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Search records in Airtable   Returns all business information: hours, pricing, payment instructions and cancellation policy. Use it to answer any question about the business.",
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appZwiGkpuDYcvtBc",
+          "mode": "list",
+          "cachedResultName": "Booking Agent.",
+          "cachedResultUrl": "https://airtable.com/appZwiGkpuDYcvtBc"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblpWTzfYaYq1b3NE",
+          "mode": "list",
+          "cachedResultName": "Business Info",
+          "cachedResultUrl": "https://airtable.com/appZwiGkpuDYcvtBc/tblpWTzfYaYq1b3NE"
+        },
+        "returnAll": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.2,
+      "position": [
+        1744,
+        176
+      ],
+      "id": "a8d80032-2e39-4bd5-aecc-df07f83cf848",
+      "name": "Get Business Info.",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "zmi92Ve30Ep4QGtU",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=   {{ $('Telegram Trigger').first().json.message.chat.id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        1616,
+        176
+      ],
+      "id": "6addc029-b2a7-4342-9de4-67d594a6c071",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appZwiGkpuDYcvtBc",
+          "mode": "list",
+          "cachedResultName": "Booking Agent.",
+          "cachedResultUrl": "https://airtable.com/appZwiGkpuDYcvtBc"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblSNABomf29mFCaw",
+          "mode": "list",
+          "cachedResultName": "Bookings",
+          "cachedResultUrl": "https://airtable.com/appZwiGkpuDYcvtBc/tblSNABomf29mFCaw"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.2,
+      "position": [
+        1872,
+        176
+      ],
+      "id": "e7031b2f-9b18-4a61-a0a5-9e884fa93e94",
+      "name": "Get Bookings For Date",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "zmi92Ve30Ep4QGtU",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Create a record in Airtabl   Creates one new pending booking. Call it only once per booking, only after checking availability and after the customer says they paid the advance. Returns the booking_id.",
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appZwiGkpuDYcvtBc",
+          "mode": "list",
+          "cachedResultName": "Booking Agent.",
+          "cachedResultUrl": "https://airtable.com/appZwiGkpuDYcvtBc"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblSNABomf29mFCaw",
+          "mode": "list",
+          "cachedResultName": "Bookings",
+          "cachedResultUrl": "https://airtable.com/appZwiGkpuDYcvtBc/tblSNABomf29mFCaw"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chat_id": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+            "status": "pending_payment_verification",
+            "language": "english"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "booking_id",
+              "displayName": "booking_id",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "pending_payment_verification",
+                  "value": "pending_payment_verification"
+                },
+                {
+                  "name": "confirmed",
+                  "value": "confirmed"
+                },
+                {
+                  "name": "completed",
+                  "value": "completed"
+                },
+                {
+                  "name": "cancelled",
+                  "value": "cancelled"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "customer_phone",
+              "displayName": "customer_phone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "facility",
+              "displayName": "facility",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "start_time",
+              "displayName": "start_time",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "duration_hours",
+              "displayName": "duration_hours",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "advance_amount",
+              "displayName": "advance_amount",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "payment_note",
+              "displayName": "payment_note",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "language",
+              "displayName": "language",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "total_price",
+              "displayName": "total_price",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "balance_due",
+              "displayName": "balance_due",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "typecast": true
+        }
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.2,
+      "position": [
+        2000,
+        176
+      ],
+      "id": "76d9727e-5ef5-4a65-beca-e5557f004680",
+      "name": "Create Booking",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "zmi92Ve30Ep4QGtU",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "fbfd9bba-4b6a-4580-9e46-fa68a251d12c",
+              "leftValue": "={{ !!$('Telegram Trigger').first().json.message.voice }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        352,
+        -64
+      ],
+      "id": "2cb3bbdf-4fb4-4dce-89a2-51714c253316",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "26268ddc-4ed0-4edc-ac7b-9d83175f0f38",
+              "name": "message_text",
+              "value": "={{ $('Telegram Trigger').item.json.message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1248,
+        80
+      ],
+      "id": "f0e1ee18-8d00-4ecf-8519-8ff813bcb751",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $('Telegram Trigger').first().json.message.voice.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        576,
+        -208
+      ],
+      "id": "c2b1d9ef-d203-48e5-bc98-f244e6da56bf",
+      "name": "Get a file",
+      "webhookId": "3d089d15-e341-4ea4-b24c-48dd18d9b270",
+      "alwaysOutputData": false,
+      "credentials": {
+        "telegramApi": {
+          "id": "IXqJcyvIZZ4bxEqq",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/audio/transcriptions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "model",
+              "value": "whisper-large-v3-turbo"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1024,
+        -208
+      ],
+      "id": "181b1b75-7a01-439f-8007-e97a41f30a78",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "AoQygG3ExjMh327h",
+          "name": "Header Auth account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e455baff-9e7f-4813-8914-0044b31f0103",
+              "name": "message_text",
+              "value": "={{ $('Telegram Trigger').first().json.message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1248,
+        -208
+      ],
+      "id": "23c3a76d-637d-483a-89fd-4ef9a15929e5",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "jsCode": "   const items = $input.all();\n   for (const item of items) {\n     item.binary.data.fileName = 'voice.ogg';\n     item.binary.data.mimeType = 'audio/ogg';\n   }\n   return items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        -208
+      ],
+      "id": "05ecbaad-3624-46b3-81f1-66ae8ea81e19",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2320,
+        -64
+      ],
+      "id": "76c934f3-b23d-43b0-8e16-6a1c59ecca1c",
+      "name": "Send a text message",
+      "webhookId": "fd9e000d-3a5b-4397-b6dd-d4cc5a3bf6fb",
+      "credentials": {
+        "telegramApi": {
+          "id": "IXqJcyvIZZ4bxEqq",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "=   🚨 Human needed\n   Customer chat ID: {{ $('Telegram Trigger').first().json.message.chat.id }}\n   {{ $fromAI('details', 'Customer name, phone number and the reason a human is needed', 'string') }}",
+        "method": "POST",
+        "url": "https://api.telegram.org/bot8876541086:AAFNggTPOxjGaqA_5FgbphCx7Jq1Lb4_z8o/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  chat_id:6556634688 ,\n  text: \"🚨 Human needed: \" + $fromAI('details', 'Customer name, phone number and the reason a human is needed', 'string')\n}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        2128,
+        176
+      ],
+      "id": "292c3b5b-1931-443a-9a30-d5a5e16dc889",
+      "name": "Notify_Manager"
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appZwiGkpuDYcvtBc",
+          "mode": "list",
+          "cachedResultName": "Booking Agent.",
+          "cachedResultUrl": "https://airtable.com/appZwiGkpuDYcvtBc"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblop5g8l7izivrOg",
+          "mode": "list",
+          "cachedResultName": "Conversations",
+          "cachedResultUrl": "https://airtable.com/appZwiGkpuDYcvtBc/tblop5g8l7izivrOg"
+        },
+        "filterByFormula": "=   {{ '{phone} = \"' + $('Telegram Trigger').first().json.message.chat.id + '\"' }}",
+        "returnAll": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        -96,
+        -64
+      ],
+      "id": "8f4a53a1-bebd-4980-b300-6a9440cc545f",
+      "name": "Check Conversation Mode",
+      "alwaysOutputData": true,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "zmi92Ve30Ep4QGtU",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5e659b11-dfb3-4d46-9c9f-f5e377bfefaa",
+              "leftValue": "=(Expression) {{ $json.mode }}",
+              "rightValue": "human",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        128,
+        -64
+      ],
+      "id": "5e8d6efb-29e5-4d31-b6c2-acbd1177f557",
+      "name": "Is human"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Check Conversation Mode",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Business Info.": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Bookings For Date": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Booking": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify_Manager": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Conversation Mode": {
+      "main": [
+        [
+          {
+            "node": "Is human",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is human": {
+      "main": [
+        [],
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "4041a606-595b-48e4-9b0a-c2d96182c0bb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b372024c1572e4e4ee5dc2e66906dfb3163a06644850f4255c8107c2cbc6c345"
+  },
+  "nodeGroups": [],
+  "id": "2DiDTjDzqUG7ntnS",
+  "tags": []
+}

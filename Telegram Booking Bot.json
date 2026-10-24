@@ -14,7 +14,7 @@
         -320,
         -64
       ],
-      "id": "b8adc5f1-5d42-49d8-8a9d-c84678963c7c",
+      "id": "",
       "name": "Telegram Trigger",
       "webhookId": "8c5bfed6-0afb-4be4-8155-dde22c630fff",
       "credentials": {
@@ -140,7 +140,7 @@
         1872,
         176
       ],
-      "id": "e7031b2f-9b18-4a61-a0a5-9e884fa93e94",
+      "id": 4",
       "name": "Get Bookings For Date",
       "credentials": {
         "airtableTokenApi": {
